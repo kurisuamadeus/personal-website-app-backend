@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"context"
-	"example/personal-website-app-backend/internal/db"
-	"example/personal-website-app-backend/internal/middleware"
-	"example/personal-website-app-backend/internal/models"
+	"os"
+
+	"github.com/kurisuamadeus/personal-website-app-backend/internal/db"
+	"github.com/kurisuamadeus/personal-website-app-backend/internal/middleware"
+	"github.com/kurisuamadeus/personal-website-app-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,7 +24,7 @@ func GetPageData(c *gin.Context) {
 		c.JSON(400, errRes)
 		return
 	}
-	coll := db.DB.Database("db_personalwebsiteapp").Collection("page_data").FindOne(context.TODO(), bson.D{{"lang", c.Query("lang")}, {"dataName", c.Query("dataname")}})
+	coll := db.DB.Database(os.Getenv("MONGODB_DB_NAME")).Collection(os.Getenv("MONGODB_DB_PAGE_COLLECTION_NAME")).FindOne(context.TODO(), bson.D{{"lang", c.Query("lang")}, {"dataName", c.Query("dataname")}})
 	collRaw, err := coll.Raw()
 
 	if err != nil {

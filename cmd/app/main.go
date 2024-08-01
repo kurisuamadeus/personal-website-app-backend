@@ -2,16 +2,26 @@ package main
 
 import (
 	"context"
-	"example/personal-website-app-backend/api"
-	"example/personal-website-app-backend/internal/db"
 	"fmt"
+	"log"
+	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/kurisuamadeus/personal-website-app-backend/api"
+	"github.com/kurisuamadeus/personal-website-app-backend/internal/db"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	fmt.Println(time.Now().Format("2006 January 02"))
+	err := godotenv.Load("./.env")
+	if err != nil {
+		log.Fatalln(".env not loaded properly")
+	}
 
 	r := gin.Default()
+
 	// corsConfig := cors.DefaultConfig()
 	// corsConfig.AllowOrigins = []string{"http://localhost:3000"}
 	// corsConfig.AllowMethods = []string{"GET"}
