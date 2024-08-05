@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/kurisuamadeus/personal-website-app-backend/internal/db"
-	"github.com/kurisuamadeus/personal-website-app-backend/internal/middleware"
 	"github.com/kurisuamadeus/personal-website-app-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +13,7 @@ import (
 
 func GetAllToolsList(c *gin.Context) {
 
-	middleware.CorsConfig(c, "GET")
+	// middleware.CorsConfig(c, "GET")
 	var res models.SucceesResponse
 	var errRes models.RequestError
 	if c.Query("lang") == "" {

@@ -4,17 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/kurisuamadeus/personal-website-app-backend/api"
 	"github.com/kurisuamadeus/personal-website-app-backend/internal/db"
+	"github.com/kurisuamadeus/personal-website-app-backend/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	fmt.Println(time.Now().Format("2006 January 02"))
 	err := godotenv.Load("./.env")
 	if err != nil {
 		log.Fatalln(".env not loaded properly")
@@ -27,6 +26,17 @@ func main() {
 	// corsConfig.AllowMethods = []string{"GET"}
 	// corsConfig.AllowHeaders = []string{"Origin"}
 	// corsConfig.AllowCredentials = false
+	middleware.CorsRouterConfig(r)
+	// r.Use(cors.New(cors.Config{
+	// 	AllowOrigins:     []string{"http://localhost:3000"},
+	// 	AllowMethods:     []string{"GET"},
+	// 	AllowHeaders:     []string{"Origin"},
+	// 	ExposeHeaders:    []string{"Content-Length"},
+	// 	AllowCredentials: true,
+	// 	AllowOriginFunc: func(origin string) bool {
+	// 		return origin == "http://localhost:3000"
+	// 	},
+	// }))
 	api.ApiPath(r)
 	db.MongoDB()
 	defer func() {

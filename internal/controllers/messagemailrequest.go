@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/kurisuamadeus/personal-website-app-backend/internal/db"
 	"github.com/kurisuamadeus/personal-website-app-backend/internal/helper"
-	"github.com/kurisuamadeus/personal-website-app-backend/internal/middleware"
 	"github.com/kurisuamadeus/personal-website-app-backend/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"gopkg.in/gomail.v2"
@@ -35,33 +36,47 @@ var inquiryMap = map[string]string{
 
 func PostNewMessage(c *gin.Context) {
 
-	middleware.CorsConfig(c, "POST")
+	//middleware.CorsConfig(c, "POST")
 	var res models.SucceesResponse
 	var errRes models.RequestError
-
-	if !validateRequest(c) {
+	var data models.ContactForm
+	rawData, err := c.GetRawData()
+	if err != nil {
+		errRes.Code = 500
+		errRes.Message = "internal server error"
+		c.JSON(400, errRes)
+		return
+	}
+	err = json.Unmarshal(rawData, &data)
+	if err != nil {
 		errRes.Code = 400
 		errRes.Message = "bad request"
 		c.JSON(400, errRes)
 		return
 	}
-	messageCount, err := db.DB.Database(os.Getenv("MONGODB_DB_NAME")).Collection(os.Getenv("MONGODB_DB_MESSAGE_COLLECTION_NAME")).CountDocuments(context.TODO(), bson.D{{"Date", time.Now().Format("2006/01/02")}})
+
+	if !validateRequest(data) {
+		errRes.Code = 400
+		errRes.Message = "bad request"
+		c.JSON(400, errRes)
+		return
+	}
+	messageCount, err := db.DB.Database(os.Getenv("MONGODB_DB_NAME")).Collection(os.Getenv("MONGODB_DB_MESSAGE_COLLECTION_NAME")).CountDocuments(context.TODO(), bson.D{{"date", time.Now().Format("2006 January 02")}, {"inquiry", data.Inquiry}})
 	if err != nil {
 		errRes.Code = 500
 		errRes.Message = "internal server error"
 		c.JSON(500, errRes)
 		return
 	}
-
 	var newMessage NewMessageFormat = NewMessageFormat{
-		Id:       helper.FormatMessageId(inquiryMap[c.GetHeader("inquiry")], messageCount+1),
+		Id:       helper.FormatMessageId(inquiryMap[strings.ToLower(data.Inquiry)], messageCount+1),
 		DateTime: time.Now(),
 		Date:     time.Now().Format("2006 January 02"),
 		Time:     helper.FormatTime(time.Now().Clock()),
-		Inquiry:  c.GetHeader("inquiry"),
-		Email:    c.GetHeader("email"),
-		Name:     c.GetHeader("name"),
-		Message:  c.GetHeader("message"),
+		Inquiry:  data.Inquiry,
+		Email:    data.Email,
+		Name:     data.Name,
+		Message:  data.Message,
 	}
 	_, err = db.DB.Database(os.Getenv("MONGODB_DB_NAME")).Collection(os.Getenv("MONGODB_DB_MESSAGE_COLLECTION_NAME")).InsertOne(context.TODO(), newMessage)
 	if err != nil {
@@ -73,13 +88,11 @@ func PostNewMessage(c *gin.Context) {
 	m := gomail.NewMessage()
 	m.SetHeader("From", os.Getenv("EMAIL_USERNAME"))
 	m.SetHeader("To", os.Getenv("EMAIL_USERNAME"))
-	m.SetHeader("Subject", c.GetHeader("inquiry"))
+	m.SetHeader("Subject", "[PersonalWebsiteMessage] "+newMessage.Inquiry+" #"+newMessage.Id)
 	m.SetBody("text/html", helper.GetFormattedHTMLMessage("NEW MESSAGE", newMessage.Id, newMessage.Inquiry, newMessage.Name, newMessage.Email, newMessage.Date, newMessage.Time, newMessage.Message))
-	// m.Attach("/home/Alex/lolcat.jpg")
 
 	d := gomail.NewDialer(os.Getenv("EMAIL_SMTP_SERVER"), 587, os.Getenv("EMAIL_USERNAME"), os.Getenv("EMAIL_PASSWORD"))
 
-	// Send the email to Bob, Cora and Dan.
 	if err := d.DialAndSend(m); err != nil {
 		errRes.Code = 500
 		errRes.Message = "internal server error"
@@ -92,12 +105,12 @@ func PostNewMessage(c *gin.Context) {
 	c.JSON(200, res)
 }
 
-func validateRequest(c *gin.Context) bool {
+func validateRequest(data models.ContactForm) bool {
 
-	if c.GetHeader("email") == "" || c.GetHeader("name") == "" || c.GetHeader("inquiry") == "" || c.GetHeader("message") == "" || inquiryMap[c.GetHeader("inquiry")] == "" {
+	if data.Email == "" || data.Name == "" || data.Inquiry == "" || data.Message == "" || inquiryMap[strings.ToLower(data.Inquiry)] == "" {
 		return false
 	}
-	if helper.ValidateEmail(c.GetHeader("email")) != nil {
+	if helper.ValidateEmail(data.Email) != nil {
 		return false
 	}
 	return true
