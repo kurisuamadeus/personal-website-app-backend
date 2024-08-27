@@ -9,7 +9,7 @@
 *.dylib
 
 #environment
-.env
+*.env
 
 # Test binary, built with `go test -c`
 *.test
@@ -22,3 +22,9 @@
 
 # Go workspace file
 go.work
+
+#cred
+*.pem
+
+#other
+miscfile/
