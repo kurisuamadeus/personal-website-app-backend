@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GetPageData(c *gin.Context) {
@@ -23,7 +24,9 @@ func GetPageData(c *gin.Context) {
 		c.JSON(400, errRes)
 		return
 	}
-	coll := db.DB.Database(os.Getenv("MONGODB_DB_NAME")).Collection(os.Getenv("MONGODB_DB_PAGE_COLLECTION_NAME")).FindOne(context.TODO(), bson.D{{"lang", c.Query("lang")}, {"dataName", c.Query("dataname")}})
+	opt := options.FindOne()
+	opt.SetProjection(bson.D{{"_id", 0}})
+	coll := db.DB.Database(os.Getenv("MONGODB_DB_NAME")).Collection(os.Getenv("MONGODB_DB_PAGE_COLLECTION_NAME")).FindOne(context.TODO(), bson.D{{"lang", c.Query("lang")}, {"dataName", c.Query("dataname")}}, opt)
 	collRaw, err := coll.Raw()
 
 	if err != nil {

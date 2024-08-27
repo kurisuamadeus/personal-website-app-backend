@@ -8,6 +8,9 @@ RUN go mod download
 
 COPY . .
 
-EXPOSE 8080
+ENV PORT=80
+ENV DOCKER=true
+
+EXPOSE $PORT
 
 CMD [ "go", "run", "cmd/app/main.go" ]
