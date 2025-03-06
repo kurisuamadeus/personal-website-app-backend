@@ -15,7 +15,7 @@ var DB *mongo.Client
 func MongoDB() {
 	var username string = os.Getenv("MONGODB_USERNAME")
 	var password string = os.Getenv("MONGODB_PASSWORD")
-	opts := options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@cluster0.h5l4h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", username, password))
+	opts := options.Client().ApplyURI(fmt.Sprintf(os.Getenv("MONGODB_URI"), username, password))
 	// Create a new client and connect to the server
 	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
